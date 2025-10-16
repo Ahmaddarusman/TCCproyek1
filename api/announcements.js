@@ -1,120 +1,67 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 
-// Database connection dengan error handling
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-});
-
-// Test connection
-pool.on('error', (err) => {
-    console.error('Database error:', err);
-});
-
-// GET semua pengumuman
+// GET semua pengumuman - SIMPLE VERSION
 router.get('/', async (req, res) => {
-    try {
-        console.log('Testing API...');
-        
-        // TEMPORARY: Return dummy data dulu
-        res.json({
-            success: true,
-            data: [
-                {
-                    id: 1,
-                    title: "Test Pengumuman",
-                    content: "Ini test kalau API sudah work",
-                    author: "System",
-                    created_at: new Date().toISOString()
-                }
-            ]
-        });
-        
-        /*
-        // COMMENT DULU database code
-        const result = await pool.query(
-            'SELECT * FROM announcements ORDER BY created_at DESC'
-        );
-        
-        res.json({
-            success: true,
-            data: result.rows
-        });
-        */
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error: ' + error.message
-        });
-    }
+  try {
+    console.log('✅ API announcements dipanggil');
+    
+    // Return simple data dulu
+    return res.json({
+      success: true,
+      data: [
+        {
+          id: 1,
+          title: "API BERHASIL!",
+          content: "Serverless function sudah tidak crash lagi",
+          author: "System",
+          created_at: new Date().toISOString()
+        }
+      ]
+    });
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    return res.json({
+      success: false,
+      message: 'Error: ' + error.message
+    });
+  }
 });
 
-// POST pengumuman baru
+// POST - simple version
 router.post('/', async (req, res) => {
-    try {
-        const { title, content, author } = req.body;
-        console.log('Adding announcement:', { title, content, author });
-        
-        // Validasi input
-        if (!title || !content || !author) {
-            return res.status(400).json({
-                success: false,
-                message: 'Judul, konten, dan penulis harus diisi'
-            });
-        }
-        
-        const result = await pool.query(
-            'INSERT INTO announcements (title, content, author) VALUES ($1, $2, $3) RETURNING *',
-            [title, content, author]
-        );
-        
-        res.json({
-            success: true,
-            message: 'Pengumuman berhasil ditambahkan',
-            data: result.rows[0]
-        });
-    } catch (error) {
-        console.error('Error adding announcement:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Gagal menambah pengumuman: ' + error.message
-        });
-    }
+  try {
+    console.log('✅ POST announcement');
+    return res.json({
+      success: true,
+      message: "Pengumuman berhasil ditambahkan (test)",
+      data: req.body
+    });
+  } catch (error) {
+    console.error('❌ POST Error:', error);
+    return res.json({
+      success: false,
+      message: 'POST Error: ' + error.message
+    });
+  }
 });
 
-// DELETE pengumuman
+// DELETE - simple version
 router.delete('/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        console.log('Deleting announcement ID:', id);
-        
-        const result = await pool.query(
-            'DELETE FROM announcements WHERE id = $1 RETURNING *',
-            [id]
-        );
-        
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Pengumuman tidak ditemukan'
-            });
-        }
-        
-        res.json({
-            success: true,
-            message: 'Pengumuman berhasil dihapus'
-        });
-    } catch (error) {
-        console.error('Error deleting announcement:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Gagal menghapus pengumuman: ' + error.message
-        });
-    }
+  try {
+    console.log('✅ DELETE announcement');
+    return res.json({
+      success: true,
+      message: "Pengumuman berhasil dihapus (test)"
+    });
+  } catch (error) {
+    console.error('❌ DELETE Error:', error);
+    return res.json({
+      success: false,
+      message: 'DELETE Error: ' + error.message
+    });
+  }
 });
 
 module.exports = router;
-
