@@ -16,7 +16,24 @@ pool.on('error', (err) => {
 // GET semua pengumuman
 router.get('/', async (req, res) => {
     try {
-        console.log('Fetching announcements...');
+        console.log('Testing API...');
+        
+        // TEMPORARY: Return dummy data dulu
+        res.json({
+            success: true,
+            data: [
+                {
+                    id: 1,
+                    title: "Test Pengumuman",
+                    content: "Ini test kalau API sudah work",
+                    author: "System",
+                    created_at: new Date().toISOString()
+                }
+            ]
+        });
+        
+        /*
+        // COMMENT DULU database code
         const result = await pool.query(
             'SELECT * FROM announcements ORDER BY created_at DESC'
         );
@@ -25,11 +42,12 @@ router.get('/', async (req, res) => {
             success: true,
             data: result.rows
         });
+        */
     } catch (error) {
-        console.error('Error fetching announcements:', error);
+        console.error('Error:', error);
         res.status(500).json({
             success: false,
-            message: 'Gagal mengambil data pengumuman'
+            message: 'Error: ' + error.message
         });
     }
 });
@@ -99,3 +117,4 @@ router.delete('/:id', async (req, res) => {
 });
 
 module.exports = router;
+
