@@ -1,114 +1,99 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 
-const SUPABASE_URL = 'https://your-project-ref.supabase.co';
-const SUPABASE_KEY = 'your-anon-key';
+// Simpan data di memory (sementara)
+let announcements = [
+  {
+    id: 1,
+    title: "Selamat Datang!",
+    content: "Ini adalah papan pengumuman pertama. Silakan tambah pengumuman Anda!",
+    author: "Admin",
+    created_at: new Date().toISOString()
+  }
+];
 
-// GET semua pengumuman via REST API
+// GET semua pengumuman
 router.get('/', async (req, res) => {
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/announcements?select=*&order=created_at.desc`, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
-      }
-    });
-    
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    const data = await response.json();
-    
+    console.log('✅ Mengambil pengumuman dari memory');
     res.json({
       success: true,
-      data: data
+      data: announcements.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     });
-    
   } catch (error) {
-    console.error('REST API Error:', error);
-    
-    // Fallback data
+    console.error('Error:', error);
     res.json({
-      success: true,
-      data: [
-        {
-          id: 1,
-          title: "Using REST API",
-          content: "Connected via Supabase REST API instead of direct DB",
-          author: "System", 
-          created_at: new Date().toISOString()
-        }
-      ]
+      success: false,
+      message: 'Gagal mengambil data',
+      data: []
     });
   }
 });
 
-// POST via REST API
+// POST pengumuman baru
 router.post('/', async (req, res) => {
   try {
     const { title, content, author } = req.body;
     
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/announcements`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify({ title, content, author })
-    });
+    if (!title || !content || !author) {
+      return res.json({
+        success: false,
+        message: 'Judul, konten, dan penulis harus diisi'
+      });
+    }
     
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const newAnnouncement = {
+      id: Date.now(),
+      title,
+      content,
+      author,
+      created_at: new Date().toISOString()
+    };
     
-    const data = await response.json();
+    announcements.push(newAnnouncement);
+    console.log('✅ Pengumuman ditambah:', newAnnouncement);
     
     res.json({
       success: true,
-      message: "Pengumuman berhasil ditambahkan!",
-      data: data[0]
+      message: 'Pengumuman berhasil ditambahkan!',
+      data: newAnnouncement
     });
-    
   } catch (error) {
-    console.error('POST Error:', error);
+    console.error('Error:', error);
     res.json({
-      success: true,
-      message: "Pengumuman berhasil (simulasi)",
-      data: {
-        id: Date.now(),
-        title: req.body.title,
-        content: req.body.content,
-        author: req.body.author,
-        created_at: new Date().toISOString()
-      }
+      success: false,
+      message: 'Gagal menambah pengumuman'
     });
   }
 });
 
-// DELETE via REST API
+// DELETE pengumuman
 router.delete('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
+    const index = announcements.findIndex(ann => ann.id === id);
     
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/announcements?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
-      }
-    });
+    if (index === -1) {
+      return res.json({
+        success: false,
+        message: 'Pengumuman tidak ditemukan'
+      });
+    }
     
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    announcements.splice(index, 1);
+    console.log('✅ Pengumuman dihapus, ID:', id);
     
     res.json({
       success: true,
-      message: "Pengumuman berhasil dihapus!"
+      message: 'Pengumuman berhasil dihapus!'
     });
-    
   } catch (error) {
-    console.error('DELETE Error:', error);
+    console.error('Error:', error);
     res.json({
-      success: true,
-      message: "Pengumuman berhasil dihapus (simulasi)"
+      success: false,
+      message: 'Gagal menghapus pengumuman'
     });
   }
 });
